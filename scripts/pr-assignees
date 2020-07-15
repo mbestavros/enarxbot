@@ -1,0 +1,30 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: Apache-2.0
+
+from github import Github
+import os
+
+github = Github(os.environ['GITHUB_TOKEN'])
+org = github.get_organization('enarx')
+
+project = {p.name: p for p in org.get_projects(state='open')}['Planning']
+columns = {c.name: c for c in project.get_columns()}
+
+for issue in github.search_issues(f"org:enarx is:pr state:open is:public -project:enarx/{project.number}"):
+    pr = issue.as_pull_request()
+
+    latest_reviews = {}
+
+    for review in pr.get_reviews():
+        latest_reviews[review.user] = review
+    
+    to_assign = []
+    to_unassign = []
+    for reviewer, review in latest_reviews:
+        if review.state == "CHANGES_REQUESTED":
+            if reviewer in pr.assignees:
+                to_unassign += [reviewer]
+            if pr.user not in pr.assignees:
+                to_assign += [pr.user]
+    pr.remove_from_assignees(to_unassign)
+    pr.add_to_assignees(to_assign)
