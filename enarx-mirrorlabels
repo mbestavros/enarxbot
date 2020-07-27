@@ -7,30 +7,30 @@ github = enarxbot.connect()
 org = github.get_organization('enarx')
 enarx = github.get_repo("enarx/enarx")
 
-enarx_labels = {l.name: l for l in enarx.get_labels()}
-enarx_label_names = {l for l in enarx_labels.keys()}
+ORGANIZATION_LABELS = enarxbot.ORGANIZATION_LABELS
+organization_label_names = {l for l in ORGANIZATION_LABELS.keys()}
 
 for repo in org.get_repos():
     repo_labels = {l.name: l for l in repo.get_labels()}
     repo_label_names = {l for l in repo_labels.keys()}
 
     # Construct sets of label names to use in processing.
-    labels_to_add = enarx_label_names - repo_label_names
-    labels_to_delete = repo_label_names - enarx_label_names
-    common_labels = repo_label_names & enarx_label_names
+    labels_to_add = organization_label_names - repo_label_names
+    labels_to_delete = repo_label_names - organization_label_names
+    common_labels = repo_label_names & organization_label_names
     
     # Add new labels, and delete unused ones.
     print(f"{repo.name}: +{labels_to_add}; -{labels_to_delete}")
     for name in labels_to_add:
-        original = enarx_labels[name]
-        repo.create_label(name=original.name, color=original.color, description=original.description)
+        original = ORGANIZATION_LABELS[name]
+        repo.create_label(name=original[name], color=original[color], description=original[description])
     for name in labels_to_delete:
         repo_labels[name].delete()
 
     # Ensure common labels share the same colors and descriptions.
     for name in common_labels:
-        description = repo_labels[name].description != enarx_labels[name].description
-        color = repo_labels[name].color != enarx_labels[name].color
+        description = repo_labels[name].description != ORGANIZATION_LABELS[name][description]
+        color = repo_labels[name].color != ORGANIZATION_LABELS[name][description]
 
         if color or description:
-            repo_labels[name].edit(enarx_labels[name].name, enarx_labels[name].color, enarx_labels[name].description)
+            repo_labels[name].edit(ORGANIZATION_LABELS[name][name], ORGANIZATION_LABELS[name][color], ORGANIZATION_LABELS[name][description])
