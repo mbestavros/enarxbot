@@ -3,6 +3,10 @@
 
 import enarxbot
 
+TO_RENAME = {
+    'amd sev': 'sev'
+}
+
 github = enarxbot.connect()
 org = github.get_organization('enarx')
 enarx = github.get_repo("enarx/enarx")
@@ -12,6 +16,20 @@ organization_label_names = {l for l in ORGANIZATION_LABELS.keys()}
 
 for repo in org.get_repos():
     repo_labels = {l.name: l for l in repo.get_labels()}
+
+    # Rename labels that need to be renamed.
+    for name in TO_RENAME.items():
+        if name[1] not in organization_label_names:
+            print(f"WARNING: {name[1]} is not present in the ORGANIZATION_LABELS list. Skipping rename until it is.")
+            continue
+        try:
+            label = repo_labels[name[0]]
+        except:
+            continue
+        label.edit(name=name[1], description=label.description, color=label.color)
+        
+    # Re-fetch the renamed labels.
+    repo_labels = repo_labels = {l.name: l for l in repo.get_labels()}
     repo_label_names = {l for l in repo_labels.keys()}
 
     # Construct sets of label names to use in processing.
